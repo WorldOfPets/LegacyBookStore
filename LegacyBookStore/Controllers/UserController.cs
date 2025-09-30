@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace LegacyBookStore.Controllers
@@ -29,7 +30,9 @@ namespace LegacyBookStore.Controllers
             if (string.IsNullOrEmpty(name))
                 name = "Guest";
 
-            return Content($"<h1>Welcome, {name}!</h1>", "text/html");
+            var encodedData = HtmlEncoder.Default.Encode(name);
+
+            return Content($"<h1>Welcome, {encodedData}!</h1>", "text/html");
         }
     }
 }
