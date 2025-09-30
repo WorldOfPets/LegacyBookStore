@@ -6,8 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddControllers();
 var app = builder.Build();
+
 
 app.Use(async (context, next) =>
 {
@@ -50,6 +51,6 @@ app.MapPost("/api/books", async (HttpContext context) =>
     context.Response.StatusCode = 201;
     await context.Response.WriteAsync("Created via minimal API (legacy style)");
 });
-
+app.MapControllers();
 
 app.Run();

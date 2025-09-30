@@ -44,7 +44,7 @@ namespace LegacyBookStore.Controllers
             }
 
             _db.Books.Add(book);
-            _db.SaveChangesAsync();
+            _db.SaveChanges();
 
             return Content("Book created", "text/plain");
         }
@@ -57,7 +57,7 @@ namespace LegacyBookStore.Controllers
                 return NotFound();
 
             _db.Books.Remove(book);
-            _db.SaveChangesAsync();
+            _db.SaveChanges();
 
             return Ok("Deleted");
         }
