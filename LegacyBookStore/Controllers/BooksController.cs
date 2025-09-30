@@ -9,6 +9,7 @@ using System.Text.Json;
 namespace LegacyBookStore.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class BooksController : Controller
     {
         private readonly AppDbContext _db;
@@ -19,20 +20,20 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpGet]
-        public string GetBooks()
+        public IActionResult GetBooks()
         {
             var books = _db.Books.ToList();
-            return JsonSerializer.Serialize(books);
+            return Ok(books);
         }
 
         [HttpGet("{id}")]
-        public string GetBook(int id)
+        public IActionResult GetBook(int id)
         {
             var book = _db.Books.Find(id);
             if (book == null)
-                return JsonSerializer.Serialize(new { error = "Book not found" });
+                return NotFound(new { error = "Book not found" });
 
-            return JsonSerializer.Serialize(book);
+            return Ok(book);
         }
 
         [HttpPost]
