@@ -7,6 +7,7 @@ using System.Text.Json;
 namespace LegacyBookStore.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class UserController : Controller
     {
         private readonly AppDbContext _db;
@@ -17,10 +18,10 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpGet]
-        public string GetUsers()
+        public IActionResult GetUsers()
         {
-            var users =  _db.Users.ToList();
-            return JsonSerializer.Serialize(users);
+            var users = _db.Users.ToList();
+            return Ok(users);
         }
 
         [HttpGet("welcome")]
