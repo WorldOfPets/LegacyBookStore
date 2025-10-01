@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace LegacyBookStore.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class UserController : Controller
     {
         private readonly AppDbContext _db;
@@ -17,10 +19,10 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpGet]
-        public string GetUsers()
+        public IActionResult GetUsers()
         {
-            var users =  _db.Users.ToList();
-            return JsonSerializer.Serialize(users);
+            var users = _db.Users.ToList();
+            return Ok(users);
         }
 
         [HttpGet("welcome")]
@@ -29,7 +31,9 @@ namespace LegacyBookStore.Controllers
             if (string.IsNullOrEmpty(name))
                 name = "Guest";
 
-            return Content($"<h1>Welcome, {name}!</h1>", "text/html");
+            var encodedData = HtmlEncoder.Default.Encode(name);
+
+            return Content($"<h1>Welcome, {encodedData}!</h1>", "text/html");
         }
     }
 }
