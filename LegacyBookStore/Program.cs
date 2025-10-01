@@ -22,6 +22,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IBooksRepository, BooksRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(options =>
