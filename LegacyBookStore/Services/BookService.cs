@@ -1,53 +1,36 @@
-﻿using LegacyBookStore.Data;
-using LegacyBookStore.Interfaces;
+﻿using LegacyBookStore.Interfaces;
 using LegacyBookStore.Models;
-using LegacyBookStore.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using LegacyBookStore.Repository;
 
 namespace LegacyBookStore.Services
 {
     public class BookService : IBookService
     {
-        private readonly AppDbContext _context;
+        private readonly IBooksRepository _booksRepository;
 
-        public BookService(AppDbContext context)
+        public BookService(IBooksRepository booksRepository)
         {
-            _context = context;
+            _booksRepository = booksRepository;
         }
 
         public async Task<List<Book>> GetAllBooksAsync()
         {
-            return await _context.Books.ToListAsync();
+            return await _booksRepository.GetBooks();
         }
 
         public async Task<Book> CreateBookAsync(Book book)
         {
-            if (string.IsNullOrWhiteSpace(book.Title))
-            {
-                throw new ArgumentException("Title is required");
-            }
-
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-            return book;
+            return await _booksRepository.CreateBook(book);
         }
 
         public async Task<bool> DeleteBookAsync(int id)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
-            {
-                return false;
-            }
-
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _booksRepository.DeleteBook(id);
         }
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _context.Books.FindAsync(id);
+            return await _booksRepository.GetBook(id);
         }
     }
 }
