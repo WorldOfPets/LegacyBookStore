@@ -1,9 +1,21 @@
-﻿using LegacyBookStore.Data;
+
+using LegacyBookStore.Data;
 using LegacyBookStore.Interfaces;
 using LegacyBookStore.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -11,7 +23,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IBookService, BookService>();
 
 builder.Services.AddControllers();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo 
+        { Title = "LegacyBookStore", Version = "v1" }
+    );
+});
+
 var app = builder.Build();
+
+app.UseCors();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "LegacyBookStore");
+});
+
 
 
 app.Use(async (context, next) =>

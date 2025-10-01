@@ -1,10 +1,11 @@
-﻿using LegacyBookStore.Interfaces;
+using LegacyBookStore.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LegacyBookStore.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+
     public class BooksController : ControllerBase
     {
         private readonly IBookService _bookService;
@@ -19,6 +20,7 @@ namespace LegacyBookStore.Controllers
         {
             var books = await _bookService.GetAllBooksAsync();
             return Ok(books);
+
         }
 
         [HttpPost]
