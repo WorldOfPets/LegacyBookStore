@@ -1,4 +1,7 @@
+
 using LegacyBookStore.Data;
+using LegacyBookStore.Interfaces;
+using LegacyBookStore.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -17,6 +20,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IBookService, BookService>();
+
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(options =>
@@ -49,5 +54,4 @@ app.Use(async (context, next) =>
 });
 
 app.MapControllers();
-
 app.Run();
