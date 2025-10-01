@@ -1,5 +1,6 @@
 ﻿using LegacyBookStore.Data;
 using LegacyBookStore.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult CreateBook([FromBody] Book book)
         {
             if (string.IsNullOrWhiteSpace(book?.Title))
@@ -51,6 +53,7 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult DeleteBook(int id)
         {
             var book = _db.Books.Find(id);
