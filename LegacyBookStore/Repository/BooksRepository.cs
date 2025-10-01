@@ -13,20 +13,22 @@ namespace LegacyBookStore.Repository
             _db = db;
         }
 
-        public async Task CreateBook(Book book)
+        public async Task<Book> CreateBook(Book book)
         {
             _db.Books.Add(book);
             await _db.SaveChangesAsync();
+            return book;
         }
 
-        public async Task DeleteBook(int id)
+        public async Task<bool> DeleteBook(int id)
         {
             var bookForRemove = await GetBook(id);
 
-            if (bookForRemove == null) return;
+            if (bookForRemove == null) return false;
 
             _db.Books.Remove(bookForRemove);
             await _db.SaveChangesAsync();
+            return true;
 
         }
 
@@ -35,7 +37,7 @@ namespace LegacyBookStore.Repository
             return await _db.Books.FindAsync(id);
         }
 
-        public async Task<IEnumerable<Book>> GetBooks()
+        public async Task<List<Book>> GetBooks()
         {
             return await _db.Books.ToListAsync();
         }
