@@ -16,7 +16,6 @@ namespace LegacyBookStore.Tests
         {
             builder.ConfigureServices(services =>
             {
-                // Удаляем существующие регистрации
                 var dbContextDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
                 if (dbContextDescriptor != null)
@@ -27,7 +26,6 @@ namespace LegacyBookStore.Tests
                 if (dbConnectionDescriptor != null)
                     services.Remove(dbConnectionDescriptor);
 
-                // Регистрируем in-memory SQLite
                 services.AddSingleton<DbConnection>(container =>
                 {
                     var connection = new SqliteConnection("DataSource=:memory:");
@@ -40,14 +38,6 @@ namespace LegacyBookStore.Tests
                     var connection = container.GetRequiredService<DbConnection>();
                     options.UseSqlite(connection);
                 });
-            });
-
-            builder.ConfigureServices(services =>
-            {
-                var serviceProvider = services.BuildServiceProvider();
-                using var scope = serviceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                context.Database.EnsureCreated();
             });
 
             builder.UseEnvironment("Development");
