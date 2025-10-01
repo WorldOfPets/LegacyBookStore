@@ -1,65 +1,49 @@
-﻿using LegacyBookStore.Data;
-using LegacyBookStore.Models;
-using Microsoft.AspNetCore.Http;
+﻿using LegacyBookStore.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Text.Json;
 
 namespace LegacyBookStore.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
-    public class BooksController : Controller
+    public class BooksController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly IBookService _bookService;
 
-        public BooksController(AppDbContext db)
+        public BooksController(IBookService bookService)
         {
-            _db = db;
+            _bookService = bookService;
         }
 
         [HttpGet]
-        public string GetBooks()
+        public async Task<IActionResult> GetBooks()
         {
-            var books = _db.Books.ToList();
-            return JsonSerializer.Serialize(books);
-        }
-
-        [HttpGet("{id}")]
-        public string GetBook(int id)
-        {
-            var book = _db.Books.Find(id);
-            if (book == null)
-                return JsonSerializer.Serialize(new { error = "Book not found" });
-
-            return JsonSerializer.Serialize(book);
+            var books = await _bookService.GetAllBooksAsync();
+            return Ok(books);
         }
 
         [HttpPost]
-        public IActionResult CreateBook([FromBody] Book book)
+        public async Task<IActionResult> CreateBook([FromBody] Models.Book book)
         {
-            if (string.IsNullOrWhiteSpace(book?.Title))
+            try
             {
-                return BadRequest("Title is required");
+                var createdBook = await _bookService.CreateBookAsync(book);
+                return CreatedAtAction(nameof(GetBooks), new { id = createdBook.Id }, createdBook);
             }
-
-            _db.Books.Add(book);
-            _db.SaveChanges();
-
-            return Content("Book created", "text/plain");
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteBook(int id)
+        public async Task<IActionResult> DeleteBook(int id)
         {
-            var book = _db.Books.Find(id);
-            if (book == null)
+            var result = await _bookService.DeleteBookAsync(id);
+            if (!result)
+            {
                 return NotFound();
-
-            _db.Books.Remove(book);
-            _db.SaveChanges();
-
-            return Ok("Deleted");
+            }
+            return NoContent();
         }
     }
 }

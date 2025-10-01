@@ -11,6 +11,13 @@ namespace LegacyBookStore.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Book>()
+                .Property(b => b.Price)
+                .HasPrecision(18, 2);
+
+
             // Простой seed для демонстрации
             modelBuilder.Entity<User>().HasData(
                 new User { Id = 1, Name = "Admin User", Email = "admin@example.com", Role = "Admin" },
