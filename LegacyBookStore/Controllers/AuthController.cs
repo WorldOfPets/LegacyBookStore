@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using LegacyBookStore.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -19,20 +20,42 @@ namespace LegacyBookStore.Controllers
 #if DEBUG
             if (request.username == "bogdan")
             {
-            var token = GenerateJwtToken(request.username);
-            return Ok(new { Token = token });
+                var token = GenerateJwtToken(request.username);
+                // Установка куки
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:ExpireMinutes"])),
+                    SameSite = SameSiteMode.Strict,
+                    Secure = false
+                };
+                Response.Cookies.Append("access_token", token, cookieOptions);
+
+                return Ok(new { message = "Login successful" });
             }
 #endif
             return Unauthorized();
         }
-        //вообще это нужно вынести
+
+        [Authorize]
+        [HttpGet("checkToken")]
+        public IActionResult CheckToken()
+        {
+            return Ok();
+        }
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token");
+            return Ok(new { message = "Logout successful" });
+        }
         private string GenerateJwtToken(string username)
         {
             var securityKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)
             );
 
-            var cred = new SigningCredentials(securityKey, SecurityAlgorithms.Aes128CbcHmacSha256);
+            var cred = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
