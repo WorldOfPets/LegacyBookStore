@@ -46,7 +46,7 @@ namespace LegacyBookStore.Tests
         }
 
         [Fact]
-        public async Task GetUsersWelcomeWithoutName_ReturnsValidationError()
+        public async Task GetUsersWelcomeWithoutName_ReturnsGuestWelcome()
         {
             // Arrange
             ResetDatabase();
@@ -55,20 +55,9 @@ namespace LegacyBookStore.Tests
             var response = await _client.GetAsync("api/user/welcome");
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
+            response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            var errorResponse = JsonSerializer.Deserialize<ValidationErrorResponse>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            Assert.NotNull(errorResponse);
-            Assert.Equal("One or more validation errors occurred.", errorResponse.Title);
-            Assert.Equal(400, errorResponse.Status);
-            Assert.NotNull(errorResponse.Errors);
-            Assert.True(errorResponse.Errors.ContainsKey("name"));
-            Assert.Contains("The name field is required.", errorResponse.Errors["name"]);
+            Assert.Equal("<h1>Welcome, Guest!</h1>", content);
         }
 
         public class ValidationErrorResponse
