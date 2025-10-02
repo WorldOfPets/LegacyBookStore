@@ -1,56 +1,96 @@
-﻿using LegacyBookStore.Data;
+﻿
+using LegacyBookStore.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using LegacyBookStore.Interfaces;
+using LegacyBookStore.Services;
+using LegacyBookStore.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddAuthentication(options => {
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}
+).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+        )
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            string authorization = context.Request.Headers["Authorization"];
+            if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
+            {
+                context.Token = authorization.Substring("Bearer ".Length).Trim();
+            }
+            else if (context.Request.Cookies.ContainsKey("access_token"))
+            {
+                context.Token = context.Request.Cookies["access_token"];
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IBooksRepository, BooksRepository>();
 builder.Services.AddControllers();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo 
+        { Title = "LegacyBookStore", Version = "v1" }
+    );
+});
+
 var app = builder.Build();
 
-
-app.Use(async (context, next) =>
+app.UseCors();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    var userIdHeader = context.Request.Headers["X-User-Id"].ToString();
-    if (!string.IsNullOrEmpty(userIdHeader) && int.TryParse(userIdHeader, out var userId))
-    {
-        // Нет проверки существования пользователя!
-        context.Items["UserId"] = userId;
-    }
-    await next();
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "LegacyBookStore");
 });
 
-app.MapGet("/api/books", (HttpContext context) =>
+
+app.UseCors();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var books = db.Books.ToList();
-    var json = System.Text.Json.JsonSerializer.Serialize(books);
-    context.Response.ContentType = "application/json";
-    context.Response.WriteAsync(json);
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "LegacyBookStore");
 });
 
-app.MapPost("/api/books", async (HttpContext context) =>
-{
-    var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-    var book = System.Text.Json.JsonSerializer.Deserialize<LegacyBookStore.Models.Book>(body);
+app.UseAuthentication();
+app.UseAuthorization();
 
-    if (string.IsNullOrWhiteSpace(book?.Title))
-    {
-        context.Response.StatusCode = 400;
-        await context.Response.WriteAsync("Title is required");
-        return;
-    }
-
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Books.Add(book);
-    await db.SaveChangesAsync();
-
-    context.Response.StatusCode = 201;
-    await context.Response.WriteAsync("Created via minimal API (legacy style)");
-});
 app.MapControllers();
-
 app.Run();
