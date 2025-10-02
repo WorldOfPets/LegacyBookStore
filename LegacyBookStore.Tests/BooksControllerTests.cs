@@ -119,21 +119,21 @@ public class BooksControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Equal(newBook.Description, book.Description);
     }
 
-    //[Theory]
-    //[InlineData("", "application/json", HttpStatusCode.BadRequest)]
-    //[InlineData("{\"title\":\"\",\"author\":\"\",\"price\":-12.99}", "application/json", HttpStatusCode.BadRequest)]
-    //public async Task AddBook_InvalidData_ReturnsBadRequest(string requestBody, string contentType, HttpStatusCode expectedStatusCode)
-    //{
-    //    // Arrange
-    //    ResetDatabase();
-    //    var content = new StringContent(requestBody, Encoding.UTF8, contentType);
+    [Theory]
+    [InlineData("", "application/json", HttpStatusCode.BadRequest)]
+    [InlineData("{\"title\":\"\",\"author\":\"\",\"price\":-12.99}", "application/json", HttpStatusCode.BadRequest)]
+    public async Task AddBook_InvalidData_ReturnsBadRequest(string requestBody, string contentType, HttpStatusCode expectedStatusCode)
+    {
+        // Arrange
+        ResetDatabase();
+        var content = new StringContent(requestBody, Encoding.UTF8, contentType);
 
-    //    // Act
-    //    var response = await _client.PostAsync("api/books", content);
+        // Act
+        var response = await _client.PostAsync("api/books", content);
 
-    //    // Assert
-    //    Assert.Equal(expectedStatusCode, response.StatusCode);
-    //}
+        // Assert
+        Assert.Equal(expectedStatusCode, response.StatusCode);
+    }
 
     [Fact]
     public async Task DeleteBookById_DeletesBook()
