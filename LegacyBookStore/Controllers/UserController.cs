@@ -1,4 +1,5 @@
 ﻿using LegacyBookStore.Data;
+using LegacyBookStore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,9 +20,9 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetUsers()
+        public async Task<IActionResult> GetUsers()
         {
-            var users = _db.Users.ToList();
+            var users = await _db.Users.ToListAsync();
             return Ok(users);
         }
 

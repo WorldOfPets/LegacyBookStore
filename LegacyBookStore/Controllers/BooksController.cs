@@ -22,10 +22,19 @@ namespace LegacyBookStore.Controllers
             return Ok(books);
 
         }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBook(int id)
+        {
+            var book = await _bookService.GetBookByIdAsync(id);
+            if (book == null)
+                return NotFound(new { error = "Book not found" });
+
+            return Ok(book);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateBook([FromBody] Models.Book book)
-        {
+        {   
             try
             {
                 var createdBook = await _bookService.CreateBookAsync(book);
@@ -45,7 +54,7 @@ namespace LegacyBookStore.Controllers
             {
                 return NotFound();
             }
-            return NoContent();
+            return Ok("Deleted");
         }
     }
 }
