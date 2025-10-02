@@ -55,4 +55,7 @@ app.Use(async (context, next) =>
 });
 
 app.MapControllers();
+
 app.Run();
+
+public partial class Program { } //make program visible to Integration tests
