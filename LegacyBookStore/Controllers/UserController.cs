@@ -26,7 +26,7 @@ namespace LegacyBookStore.Controllers
         }
 
         [HttpGet("welcome")]
-        public IActionResult Welcome(string name)
+        public IActionResult Welcome(string name = null)
         {
             if (string.IsNullOrEmpty(name))
                 name = "Guest";
