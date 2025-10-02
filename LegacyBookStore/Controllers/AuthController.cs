@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using LegacyBookStore.Data;
 using LegacyBookStore.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,15 +14,44 @@ namespace LegacyBookStore.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IConfiguration _configuration) : ControllerBase
+    public class AuthController(IConfiguration _configuration, AppDbContext _context) : ControllerBase
     {
-        [HttpPost("login")]
-        public IActionResult Login(LoginRequest request)
+        //Email у нас пока не используется и проверить его нельзя
+        //кто будет делать таску на IEmailSenderService, тот и допилит
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] LoginRequest registerModel)
         {
-#if DEBUG
-            if (request.username == "bogdan")
+            if (await _context.Users.AnyAsync(u => u.Name == registerModel.Username))
             {
-                var token = GenerateJwtToken(request.username);
+                return BadRequest("Username already exists");
+            }
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(registerModel.Password);
+
+            var user = new Models.User
+            {
+                Name = registerModel.Username,
+                PasswordHash = passwordHash
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User registered successfully" });
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginRequest request)
+        {
+            var user = await _context.Users.Where(u => u.Name == request.Username).FirstOrDefaultAsync();
+            //нужен репозиторий
+            if (user is not null)
+            {
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                {
+                    return Unauthorized("Invalid username or password");
+                }
+                var token = GenerateJwtToken(request.Username);
                 // Установка куки
                 var cookieOptions = new CookieOptions
                 {
@@ -33,8 +64,7 @@ namespace LegacyBookStore.Controllers
 
                 return Ok(new { message = "Login successful" });
             }
-#endif
-            return Unauthorized();
+            return Unauthorized("Invalid username or password");
         }
 
         [Authorize]
